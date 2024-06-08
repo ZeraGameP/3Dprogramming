@@ -1,4 +1,6 @@
 ﻿#include "main.h"
+#include "HamuHamu.h"
+#include "Terrain.h"
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // エントリーポイント
@@ -64,7 +66,38 @@ void Application::PreUpdate()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::Update()
 {
+	//カメラ行列の更新
+	{
+		Math::Matrix _mScale =
+			Math::Matrix::CreateScale(1.0f);
+
+		//移動行列
+		Math::Matrix _mTrans =
+			/*Math::Matrix::CreateTranslation(
+				m_mHamuWorld._41+0,
+				m_mHamuWorld._42+6,
+				m_mHamuWorld._43 +(- 5));*/
+			Math::Matrix::CreateTranslation(0, 3, -10);
+
+		//回転行列
+		Math::Matrix _mRotate =
+			Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(rad));
+
+
+		//カメラのワールド行列を作成し、
+		Math::Matrix _mWorld = (_mScale * _mTrans * _mRotate);
+		m_spCamera->SetCameraMatrix(_mWorld);
+	}
+
+	//ハムの一括更新
+	for (std::shared_ptr<KdGameObject>gameobj : m_GameObjList)
+	{
+		gameobj->Update();
+	}
+	
 }
+
+
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // アプリケーション更新の後処理
@@ -100,6 +133,7 @@ void Application::KdPostDraw()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::PreDraw()
 {
+	m_spCamera->SetToShader();
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -111,6 +145,7 @@ void Application::Draw()
 	// 光を遮るオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginGenerateDepthMapFromLight();
 	{
+		
 	}
 	KdShaderManager::Instance().m_StandardShader.EndGenerateDepthMapFromLight();
 
@@ -119,6 +154,21 @@ void Application::Draw()
 	// 陰影のあるオブジェクト(不透明な物体や2Dキャラ)はBeginとEndの間にまとめてDrawする
 	KdShaderManager::Instance().m_StandardShader.BeginLit();
 	{
+		for (std::shared_ptr<KdGameObject>gameobj:m_GameObjList)
+		{
+			gameobj->DrawLit();
+		}
+
+		////ハムの描画
+		//{
+		//	m_spHamu->DrawLit();
+		//}
+		////地形描画
+		//{
+		//	m_spTerrain->DrawLit();
+		//}
+
+
 	}
 	KdShaderManager::Instance().m_StandardShader.EndLit();
 
@@ -178,9 +228,9 @@ bool Application::Init(int w, int h)
 	// フルスクリーン確認
 	//===================================================================
 	bool bFullScreen = false;
-	if (MessageBoxA(m_window.GetWndHandle(), "フルスクリーンにしますか？", "確認", MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) {
+	/*if (MessageBoxA(m_window.GetWndHandle(), "フルスクリーンにしますか？", "確認", MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES) {
 		bFullScreen = true;
-	}
+	}*/
 
 	//===================================================================
 	// Direct3D初期化
@@ -221,8 +271,25 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	KdAudioManager::Instance().Init();
 
+	//===================================================================
+	// カメラ初期化
+	//===================================================================
+	m_spCamera = std::make_shared<KdCamera>();
 
-	abc = 5;//後で消す！
+	//===================================================================
+	// キャラクター初期化
+	//===================================================================
+	std::shared_ptr<HamuHamu> _spHamu = std::make_shared<HamuHamu>();
+	_spHamu->Init();
+
+	m_GameObjList.push_back(_spHamu);
+	//===================================================================
+	// 地形初期化
+	//===================================================================
+	std::shared_ptr<Terrain> _spTerrain = std::make_shared<Terrain>();
+	_spTerrain->Init();
+
+	m_GameObjList.push_back(_spTerrain);
 
 	return true;
 }

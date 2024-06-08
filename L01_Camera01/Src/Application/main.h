@@ -51,12 +51,24 @@ private:
 	// ゲーム終了フラグ trueで終了する
 	bool		m_endFlag = false;
 
+	float rad;
+
+	float zoom;
+
+	//カメラ
+	std::shared_ptr<KdCamera> m_spCamera = nullptr;
+
+	//ゲーム中に存在するすべてのオブジェクト
+	std::vector<std::shared_ptr<KdGameObject>> m_GameObjList;
+
+	//ハム太郎のワールド行列
+	//Math::Matrix m_mHamuWorld = Math::Matrix::Identity;
 //=====================================================
 // シングルトンパターン
 //=====================================================
 private:
 	// 
-	int abc;//後で消す
+	
 
 	Application() {}
 
